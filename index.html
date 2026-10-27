@@ -3,947 +3,418 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Adaptador DUA & Lectura Fácil | Diplomatura de Extensión 2026</title>
+  <title>Adaptador DUA & Lectura Fácil</title>
   
-  <!-- Tailwind CSS CDN -->
-  <script src="https://cdn.tailwindcss.com"></script>
-  <!-- Marked.js para renderizado de Markdown -->
+  <!-- Librerías externas para accesibilidad, lectura de documentos y Markdown -->
   <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-  <!-- Lucide Icons -->
-  <script src="https://unpkg.com/lucide@latest"></script>
-  
-  <!-- Mammoth.js para extraer texto de archivos .docx -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
-  <!-- PDF.js para extraer texto de archivos .pdf página a página -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
-
-  <script>
-    // Configurar worker de PDF.js
-    if (window.pdfjsLib) {
-      pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
-    }
-
-    tailwind.config = {
-      darkMode: 'class',
-      theme: {
-        extend: {
-          colors: {
-            brand: {
-              50: '#f0f5fa',
-              100: '#e1ebf4',
-              600: '#1d4ed8',
-              700: '#1a365d',
-              800: '#0f2747',
-              900: '#0d1b2a',
-            },
-            accessibleYellow: '#ffd60a'
-          }
-        }
-      }
-    }
-  </script>
-
+  
   <style>
     :root {
+      --bg-color: #f8fafc;
+      --card-bg: #ffffff;
+      --text-main: #0f172a;
+      --text-muted: #475569;
+      --border-color: #cbd5e1;
+      --primary: #1e3a8a;
+      --primary-hover: #172554;
+      --accent: #2563eb;
+      --accent-soft: #dbeafe;
+      --focus-ring: #ea580c;
       --base-font-size: 16px;
+      --line-height: 1.6;
     }
-    html {
-      font-size: var(--base-font-size);
+
+    /* Modo Alto Contraste */
+    body.high-contrast {
+      --bg-color: #000000;
+      --card-bg: #121212;
+      --text-main: #ffffff;
+      --text-muted: #e2e8f0;
+      --border-color: #ffffff;
+      --primary: #facc15;
+      --primary-hover: #fef08a;
+      --accent: #38bdf8;
+      --accent-soft: #1e293b;
+      --focus-ring: #ffff00;
     }
+
+    body.high-contrast button.btn-primary {
+      color: #000000;
+      font-weight: 800;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
     body {
-      font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
-      line-height: 1.6;
-    }
-    
-    /* Enfoque accesible visible */
-    *:focus-visible {
-      outline: 3px solid #ffd60a !important;
-      outline-offset: 2px !important;
-    }
-
-    /* Estilos del resultado adaptado en Lectura Fácil */
-    .prose-custom h1 { font-size: 1.55rem; font-weight: 800; margin-top: 1.25rem; margin-bottom: 0.75rem; color: #1a365d; }
-    .prose-custom h2 { font-size: 1.3rem; font-weight: 700; margin-top: 1.25rem; margin-bottom: 0.5rem; color: #1e3a8a; }
-    .prose-custom h3 { font-size: 1.15rem; font-weight: 600; margin-top: 1rem; margin-bottom: 0.5rem; color: #0284c7; }
-    .dark .prose-custom h1 { color: #93c5fd; }
-    .dark .prose-custom h2 { color: #60a5fa; }
-    .dark .prose-custom h3 { color: #38bdf8; }
-
-    .prose-custom p { margin-bottom: 0.85rem; line-height: 1.7; }
-    .prose-custom ul { list-style-type: disc; margin-left: 1.5rem; margin-bottom: 1rem; }
-    .prose-custom ol { list-style-type: decimal; margin-left: 1.5rem; margin-bottom: 1rem; }
-    .prose-custom li { margin-bottom: 0.4rem; }
-    .prose-custom strong { font-weight: 700; }
-    .prose-custom blockquote {
-      border-left: 4px solid #2563eb;
-      padding-left: 1rem;
-      margin-left: 0;
-      background-color: rgba(37, 99, 235, 0.05);
-      padding-top: 0.4rem;
-      padding-bottom: 0.4rem;
-      border-radius: 0 0.5rem 0.5rem 0;
+      font-family: Arial, Helvetica, sans-serif;
+      font-size: var(--base-font-size);
+      line-height: var(--line-height);
+      background-color: var(--bg-color);
+      color: var(--text-main);
+      padding: 24px 16px;
+      transition: background-color 0.2s, color 0.2s;
     }
 
-    /* Notas de apoyo visual entre corchetes */
-    .prose-custom em {
-      color: #0284c7;
-      font-style: italic;
-    }
-    .dark .prose-custom em {
-      color: #38bdf8;
+    :focus-visible {
+      outline: 3px solid var(--focus-ring);
+      outline-offset: 3px;
     }
 
-    /* Zona de arrastrar archivos */
-    .dragover-active {
-      border-color: #2563eb !important;
-      background-color: rgba(37, 99, 235, 0.08) !important;
-      transform: scale(1.005);
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
     }
 
-    @media print {
-      body * {
-        visibility: hidden;
-      }
-      #printArea, #printArea * {
-        visibility: visible;
-      }
-      #printArea {
-        position: absolute;
-        left: 0;
-        top: 0;
-        width: 100%;
-        color: black !important;
-        background: white !important;
-      }
-      .no-print {
-        display: none !important;
-      }
+    /* Barra superior de accesibilidad */
+    .a11y-toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      background-color: var(--card-bg);
+      padding: 12px 18px;
+      border-radius: 12px;
+      border: 2px solid var(--border-color);
+      gap: 12px;
+    }
+
+    .toolbar-group {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .btn {
+      padding: 8px 14px;
+      border-radius: 8px;
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      border: 2px solid var(--border-color);
+      background-color: var(--card-bg);
+      color: var(--text-main);
+      transition: all 0.15s ease-in-out;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+
+    .btn:hover {
+      background-color: var(--accent-soft);
+      border-color: var(--accent);
+    }
+
+    .btn-primary {
+      background-color: var(--primary);
+      color: #ffffff;
+      border-color: var(--primary);
+    }
+
+    .btn-primary:hover {
+      background-color: var(--primary-hover);
+      border-color: var(--primary-hover);
+    }
+
+    /* Cabecera institucional */
+    header {
+      background-color: var(--card-bg);
+      border: 2px solid var(--border-color);
+      border-radius: 12px;
+      padding: 24px;
+      text-align: center;
+    }
+
+    header h1 {
+      font-size: 1.8rem;
+      color: var(--primary);
+      margin-bottom: 8px;
+    }
+
+    body.high-contrast header h1 {
+      color: var(--primary);
+    }
+
+    header p {
+      font-size: 1.1rem;
+      color: var(--text-muted);
+    }
+
+    /* Tarjetas principales */
+    .card {
+      background-color: var(--card-bg);
+      border: 2px solid var(--border-color);
+      border-radius: 12px;
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    /* Zona de carga y arrastre */
+    .drop-zone {
+      border: 3px dashed var(--accent);
+      border-radius: 12px;
+      padding: 28px 16px;
+      text-align: center;
+      cursor: pointer;
+      background-color: var(--accent-soft);
+      transition: border-color 0.2s, background-color 0.2s;
+    }
+
+    .drop-zone:hover, .drop-zone.dragover {
+      border-color: var(--primary);
+      background-color: var(--card-bg);
+    }
+
+    .drop-zone p {
+      font-weight: bold;
+      color: var(--text-main);
+      margin-bottom: 6px;
+    }
+
+    .drop-zone span {
+      font-size: 0.9rem;
+      color: var(--text-muted);
+    }
+
+    input[type="file"] {
+      display: none;
+    }
+
+    /* Área de texto */
+    label {
+      font-weight: 700;
+      font-size: 1.05rem;
+    }
+
+    textarea {
+      width: 100%;
+      min-height: 180px;
+      padding: 14px;
+      border-radius: 8px;
+      border: 2px solid var(--border-color);
+      background-color: var(--card-bg);
+      color: var(--text-main);
+      font-family: inherit;
+      font-size: 1rem;
+      line-height: 1.5;
+      resize: vertical;
+    }
+
+    .meta-info {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.9rem;
+      color: var(--text-muted);
+    }
+
+    /* Estado de carga */
+    .status-box {
+      display: none;
+      padding: 14px 18px;
+      border-radius: 8px;
+      background-color: var(--accent-soft);
+      border: 2px solid var(--accent);
+      color: var(--text-main);
+      font-weight: bold;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .spinner {
+      width: 20px;
+      height: 20px;
+      border: 3px solid var(--border-color);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    /* Área de resultado */
+    .output-container {
+      display: none;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .output-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      justify-content: flex-end;
+    }
+
+    .content-box {
+      border: 2px solid var(--border-color);
+      border-radius: 12px;
+      padding: 28px;
+      background-color: var(--card-bg);
+    }
+
+    .content-box h2, .content-box h3 {
+      color: var(--primary);
+      margin-top: 18px;
+      margin-bottom: 10px;
+      line-height: 1.3;
+    }
+
+    .content-box p {
+      margin-bottom: 14px;
+    }
+
+    .content-box ul, .content-box ol {
+      margin-left: 24px;
+      margin-bottom: 14px;
+    }
+
+    .content-box li {
+      margin-bottom: 8px;
+    }
+
+    .content-box strong {
+      color: var(--text-main);
+    }
+
+    footer {
+      text-align: center;
+      padding: 16px;
+      font-size: 0.9rem;
+      color: var(--text-muted);
+      border-top: 1px solid var(--border-color);
     }
   </style>
 </head>
+<body>
 
-<body class="bg-slate-50 text-slate-900 dark:bg-[#0a0f18] dark:text-slate-100 min-h-screen flex flex-col transition-colors duration-200">
-
-  <!-- CABECERA INSTITUCIONAL Y HERRAMIENTAS DE ACCESIBILIDAD -->
-  <header class="bg-brand-900 text-white shadow-md border-b-4 border-blue-500 no-print">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
-      <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-        
-        <!-- Identidad Institucional -->
-        <div class="flex items-center gap-3">
-          <div class="p-2.5 bg-blue-600 rounded-xl shadow-inner text-white flex items-center justify-center">
-            <i data-lucide="book-open-check" class="w-7 h-7"></i>
-          </div>
-          <div>
-            <h1 class="text-xl sm:text-2xl font-black tracking-tight flex items-center gap-2">
-              Adaptador DUA & Lectura Fácil
-            </h1>
-            <p class="text-xs sm:text-sm text-blue-200 font-medium">
-              Diplomatura de Extensión — Accesibilidad 2026
-            </p>
-          </div>
-        </div>
-
-        <!-- Barra de herramientas accesible -->
-        <nav aria-label="Herramientas de accesibilidad" class="flex flex-wrap items-center gap-2 bg-brand-800/80 p-1.5 rounded-xl border border-blue-900">
-          <span class="text-xs font-semibold px-2 text-blue-200 hidden sm:inline-block">Accesibilidad:</span>
-          
-          <!-- Tamaño de letra -->
-          <div class="flex items-center bg-brand-900 rounded-lg p-0.5 border border-slate-700">
-            <button id="btnFontDec" aria-label="Disminuir tamaño de letra" title="Reducir fuente" class="p-2 hover:bg-slate-700 rounded text-sm font-bold active:scale-95 transition-all">
-              A-
-            </button>
-            <button id="btnFontReset" aria-label="Restablecer tamaño de letra" title="Tamaño original" class="px-2 py-1 text-xs hover:bg-slate-700 rounded text-slate-300">
-              Normal
-            </button>
-            <button id="btnFontInc" aria-label="Aumentar tamaño de letra" title="Aumentar fuente" class="p-2 hover:bg-slate-700 rounded text-sm font-bold active:scale-95 transition-all">
-              A+
-            </button>
-          </div>
-
-          <!-- Alto Contraste / Modo Oscuro -->
-          <button id="btnTheme" aria-label="Alternar modo contraste" class="flex items-center gap-1.5 px-3 py-2 bg-brand-900 hover:bg-slate-700 border border-slate-700 rounded-lg text-xs font-semibold active:scale-95 transition-all">
-            <i data-lucide="sun-medium" id="themeIcon" class="w-4 h-4 text-accessibleYellow"></i>
-            <span id="themeLabel">Contraste</span>
-          </button>
-
-          <!-- Detener reproducción de voz global -->
-          <button id="btnStopSpeechGlobal" aria-label="Detener voz" title="Detener audio en reproducción" class="hidden flex items-center gap-1.5 px-3 py-2 bg-red-700 hover:bg-red-800 rounded-lg text-xs font-bold text-white transition-all">
-            <i data-lucide="square" class="w-3.5 h-3.5 fill-current"></i>
-            <span>Detener voz</span>
-          </button>
-        </nav>
-      </div>
-    </div>
-  </header>
-
-  <!-- CONTENIDO PRINCIPAL -->
-  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 flex-grow w-full">
+  <div class="container">
     
-    <!-- GESTOR DE API KEY (Colapsable y persistente en LocalStorage) -->
-    <section aria-labelledby="apiKeyHeading" class="mb-6 bg-white dark:bg-slate-900 rounded-2xl p-4 sm:p-5 shadow-sm border border-slate-200 dark:border-slate-800 transition-all no-print">
-      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 cursor-pointer select-none" id="toggleApiKeyHeader">
-        <div class="flex items-center gap-2">
-          <i data-lucide="key-round" class="w-5 h-5 text-blue-600 dark:text-blue-400"></i>
-          <h2 id="apiKeyHeading" class="text-base font-bold text-slate-800 dark:text-slate-100">
-            Credencial de Acceso (Google Gemini API Key)
-          </h2>
-          <span id="keyStatusBadge" class="text-xs px-2.5 py-0.5 rounded-full font-semibold bg-red-100 text-red-800 dark:bg-red-950 dark:text-red-300">
-            No configurada
-          </span>
-        </div>
-        <button type="button" id="btnToggleApiKeyPanel" class="text-xs font-medium text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1 self-start sm:self-auto">
-          <span id="toggleKeyText">Gestionar clave</span>
-          <i data-lucide="chevron-down" id="chevronKey" class="w-4 h-4 transition-transform"></i>
+    <!-- Barra de Accesibilidad -->
+    <nav class="a11y-toolbar" aria-label="Herramientas de accesibilidad">
+      <div class="toolbar-group">
+        <span>Tamaño de texto:</span>
+        <button type="button" class="btn" id="btn-dec" aria-label="Disminuir tamaño de texto">A -</button>
+        <button type="button" class="btn" id="btn-reset" aria-label="Restablecer tamaño">Normal</button>
+        <button type="button" class="btn" id="btn-inc" aria-label="Aumentar tamaño de texto">A +</button>
+      </div>
+
+      <div class="toolbar-group">
+        <button type="button" class="btn" id="btn-contrast" aria-label="Alternar modo de alto contraste">
+          🌓 Alto Contraste
         </button>
       </div>
+    </nav>
 
-      <div id="apiKeyPanelBody" class="mt-4 pt-3 border-t border-slate-100 dark:border-slate-800 space-y-3">
-        <p class="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
-          La clave se guarda localmente en este navegador. Funciona con cualquier proyecto predeterminado (como <em>Default Gemini Project</em>). 
-          Puedes obtener una clave gratuita sin costo en: 
-          <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener noreferrer" class="text-blue-600 dark:text-blue-400 underline font-semibold hover:text-blue-800">
-            Google AI Studio <i data-lucide="external-link" class="w-3 h-3 inline-block"></i>
-          </a>.
-        </p>
+    <!-- Encabezado Institucional -->
+    <header>
+      <h1>Adaptador DUA & Lectura Fácil</h1>
+      <p>Diplomatura de Extensión - Accesibilidad 2026</p>
+    </header>
 
-        <div class="flex flex-col sm:flex-row gap-2">
-          <div class="relative flex-grow">
-            <input type="password" id="inputApiKey" placeholder="Pega aquí tu clave (ej. AIzaSy...)" 
-              class="w-full px-3 py-2 text-sm rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500 pr-10 font-mono"
-              aria-label="Gemini API Key">
-            <button type="button" id="btnToggleShowKey" title="Mostrar/Ocultar clave" class="absolute right-2 top-2.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
-              <i data-lucide="eye" id="eyeIcon" class="w-4 h-4"></i>
-            </button>
-          </div>
-          <button type="button" id="btnSaveKey" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-semibold flex items-center justify-center gap-1.5 shadow-sm active:scale-95 transition-all">
-            <i data-lucide="save" class="w-4 h-4"></i>
-            Guardar clave
+    <!-- Formulario Principal -->
+    <main class="card">
+      
+      <!-- Zona de archivos -->
+      <div class="drop-zone" id="drop-zone" tabindex="0" role="button" aria-label="Cargar archivo Word, PDF o TXT">
+        <p>📄 Arrastra y suelta aquí tu archivo (.docx, .pdf, .txt)</p>
+        <span>o haz clic para buscar en tu dispositivo</span>
+        <input type="file" id="file-input" accept=".docx,.pdf,.txt">
+      </div>
+
+      <div>
+        <label for="input-text">Texto a transformar:</label>
+        <textarea id="input-text" placeholder="Pega el texto aquí o sube un documento mediante la caja de arriba..."></textarea>
+      </div>
+
+      <div class="meta-info">
+        <span id="char-counter">Caracteres: 0</span>
+        <span id="word-counter">Palabras: 0</span>
+      </div>
+
+      <!-- Barra de estado -->
+      <div class="status-box" id="status-box" aria-live="polite">
+        <div class="spinner"></div>
+        <span id="status-text">Procesando...</span>
+      </div>
+
+      <button type="button" class="btn btn-primary" id="btn-process" style="padding: 14px 20px; font-size: 1.1rem;">
+        ✨ Adaptar a Lectura Fácil
+      </button>
+
+    </main>
+
+    <!-- Contenedor de Resultados -->
+    <section class="card output-container" id="output-section" aria-labelledby="output-title">
+      <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+        <h2 id="output-title" style="font-size: 1.4rem; color: var(--primary);">Versión Accesible</h2>
+        
+        <div class="output-actions">
+          <button type="button" class="btn" id="btn-tts" aria-label="Escuchar lectura en voz alta">
+            🔊 Escuchar
           </button>
-          <button type="button" id="btnClearKey" class="px-3 py-2 bg-slate-200 dark:bg-slate-800 hover:bg-red-100 dark:hover:bg-red-950 text-slate-700 dark:text-slate-300 hover:text-red-600 rounded-lg text-sm font-medium transition-colors">
-            Borrar
+          <button type="button" class="btn" id="btn-copy" aria-label="Copiar texto al portapapeles">
+            📋 Copiar
+          </button>
+          <button type="button" class="btn" id="btn-print" aria-label="Imprimir o guardar en PDF">
+            🖨️ Imprimir
           </button>
         </div>
       </div>
+
+      <div class="content-box" id="output-content"></div>
     </section>
 
-    <!-- ÁREA PRINCIPAL: CARGA Y RESULTADOS (2 COLUMNAS) -->
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
-      
-      <!-- COLUMNA 1: EXTRACCIÓN Y ENTRADA DE TEXTO -->
-      <section aria-labelledby="inputSectionHeading" class="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 p-5 flex flex-col no-print">
-        <div class="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
-          <div class="flex items-center gap-2">
-            <i data-lucide="file-up" class="w-5 h-5 text-blue-600 dark:text-blue-400"></i>
-            <h2 id="inputSectionHeading" class="text-base font-bold text-slate-800 dark:text-slate-100">
-              Material de Origen
-            </h2>
-          </div>
-          <button type="button" id="btnLoadSample" class="text-xs px-2.5 py-1.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-slate-700 dark:text-slate-300 font-semibold rounded-md border border-slate-200 dark:border-slate-700 transition-colors">
-            Cargar ejemplo
-          </button>
-        </div>
+    <footer>
+      <p>Diseño Universal para el Aprendizaje (DUA) y Lectura Fácil | Acceso Público Autónomo</p>
+    </footer>
 
-        <!-- ZONA DE CARGA DE ARCHIVOS (.PDF, .DOCX, .TXT) -->
-        <div class="mt-3">
-          <div id="dropZone" class="border-2 border-dashed border-slate-300 dark:border-slate-700 rounded-xl p-5 text-center hover:border-blue-500 dark:hover:border-blue-400 bg-slate-50/50 dark:bg-slate-950/50 transition-all cursor-pointer">
-            <input type="file" id="fileInput" accept=".pdf,.docx,.txt,.md" class="hidden">
-            <div class="flex flex-col items-center justify-center space-y-2 pointer-events-none">
-              <div class="p-3 bg-blue-100 dark:bg-blue-950 rounded-full text-blue-600 dark:text-blue-300">
-                <i data-lucide="upload-cloud" class="w-6 h-6"></i>
-              </div>
-              <p class="text-sm font-semibold text-slate-700 dark:text-slate-200">
-                Arrastra aquí tu documento o <span class="text-blue-600 dark:text-blue-400 underline">haz clic para examinar</span>
-              </p>
-              <p class="text-xs text-slate-500 dark:text-slate-400">
-                Formatos soportados: <strong>PDF (.pdf)</strong>, <strong>Word (.docx)</strong> y <strong>Texto (.txt)</strong>
-              </p>
-            </div>
-          </div>
-        </div>
+  </div>
 
-        <!-- Barra de progreso / Estado de lectura del archivo -->
-        <div id="fileParsingStatus" class="hidden mt-3 p-3 bg-blue-50 dark:bg-slate-800 rounded-xl border border-blue-100 dark:border-slate-700 flex items-center justify-between">
-          <div class="flex items-center gap-2 overflow-hidden">
-            <div id="fileParsingSpinner" class="w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin flex-shrink-0"></div>
-            <span id="fileParsingLabel" class="text-xs font-semibold text-blue-900 dark:text-blue-200 truncate">
-              Extrayendo texto del archivo...
-            </span>
-          </div>
-          <span id="fileBadge" class="text-[11px] px-2 py-0.5 rounded bg-blue-200 text-blue-800 dark:bg-blue-900 dark:text-blue-200 font-bold uppercase">
-            DOCX/PDF
-          </span>
-        </div>
-
-        <!-- Editor / Revisor del texto extraído -->
-        <div class="mt-4">
-          <label for="sourceText" class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
-            Texto extraído (puedes revisarlo o editarlo antes de transformar):
-          </label>
-          <textarea id="sourceText" rows="12" placeholder="El texto extraído de tu archivo aparecerá aquí. También puedes escribir o pegar texto directamente..." 
-            class="w-full p-3.5 text-sm rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-blue-600 resize-y leading-relaxed outline-none transition-all"
-            aria-label="Contenido del texto extraído o pegado"></textarea>
-        </div>
-
-        <!-- Contador y herramientas de limpieza -->
-        <div class="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400 pt-2">
-          <div class="space-x-3">
-            <span>Palabras: <strong id="wordCount" class="text-slate-700 dark:text-slate-200">0</strong></span>
-            <span>Caracteres: <strong id="charCount" class="text-slate-700 dark:text-slate-200">0</strong></span>
-          </div>
-          <button type="button" id="btnClearText" class="hover:text-red-600 dark:hover:text-red-400 transition-colors font-medium">
-            Limpiar contenido
-          </button>
-        </div>
-
-        <!-- Botón de Transformación DUA -->
-        <div class="mt-5">
-          <button type="button" id="btnTransform" class="w-full py-3.5 px-6 bg-brand-700 hover:bg-brand-800 text-white font-bold text-base rounded-xl shadow-md hover:shadow-lg active:scale-[0.99] transition-all flex items-center justify-center gap-2 group">
-            <i data-lucide="sparkles" class="w-5 h-5 text-accessibleYellow group-hover:rotate-12 transition-transform"></i>
-            <span id="btnTransformText">Adaptar a Lectura Fácil (DUA)</span>
-          </button>
-        </div>
-
-        <!-- Nota técnica -->
-        <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-3 text-center">
-          La extracción de PDFs y Word se procesa 100% en tu navegador; los documentos nunca se envían a servidores de terceros.
-        </p>
-      </section>
-
-      <!-- COLUMNA 2: RESULTADO EN LECTURA FÁCIL -->
-      <section aria-labelledby="outputHeading" class="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 p-5 flex flex-col min-h-[580px]">
-        
-        <div class="flex flex-wrap items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800 gap-2">
-          <div class="flex items-center gap-2">
-            <i data-lucide="check-circle-2" class="w-5 h-5 text-emerald-600 dark:text-emerald-400"></i>
-            <h2 id="outputHeading" class="text-base font-bold text-slate-800 dark:text-slate-100">
-              Versión en Lectura Fácil
-            </h2>
-          </div>
-
-          <!-- Acciones sobre el resultado -->
-          <div id="outputActions" class="flex flex-wrap items-center gap-1.5 opacity-40 pointer-events-none transition-opacity no-print">
-            
-            <!-- Copiar -->
-            <button type="button" id="btnCopyResult" class="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-lg text-xs font-semibold border border-slate-200 dark:border-slate-700 flex items-center gap-1" title="Copiar texto adaptado">
-              <i data-lucide="copy" class="w-4 h-4"></i>
-              <span class="hidden sm:inline">Copiar</span>
-            </button>
-            
-            <!-- Escuchar en voz alta (TTS) -->
-            <button type="button" id="btnSpeakResult" class="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-lg text-xs font-semibold border border-slate-200 dark:border-slate-700 flex items-center gap-1" title="Lectura auditiva accesible">
-              <i data-lucide="volume-2" id="speakIcon" class="w-4 h-4 text-blue-600 dark:text-blue-400"></i>
-              <span class="hidden sm:inline" id="speakLabel">Escuchar</span>
-            </button>
-
-            <!-- Imprimir / PDF -->
-            <button type="button" id="btnPrintResult" class="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-lg text-xs font-semibold border border-slate-200 dark:border-slate-700 flex items-center gap-1" title="Imprimir o exportar como PDF">
-              <i data-lucide="printer" class="w-4 h-4"></i>
-              <span class="hidden sm:inline">Imprimir</span>
-            </button>
-
-            <!-- Descargar TXT -->
-            <button type="button" id="btnDownloadResult" class="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-lg text-xs font-semibold border border-slate-200 dark:border-slate-700 flex items-center gap-1" title="Descargar como archivo de texto">
-              <i data-lucide="download" class="w-4 h-4"></i>
-              <span class="hidden sm:inline">Descargar</span>
-            </button>
-          </div>
-        </div>
-
-        <!-- ESTADO INICIAL VACÍO -->
-        <div id="emptyState" class="flex-grow flex flex-col items-center justify-center p-8 text-center text-slate-400 dark:text-slate-500">
-          <div class="w-16 h-16 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center mb-3">
-            <i data-lucide="file-text" class="w-8 h-8 text-slate-300 dark:text-slate-600"></i>
-          </div>
-          <p class="font-bold text-slate-700 dark:text-slate-300 text-sm">
-            Listo para procesar tu material
-          </p>
-          <p class="text-xs text-slate-500 dark:text-slate-400 max-w-sm mt-1">
-            Sube un documento PDF o Word (.docx) a la izquierda y presiona <strong>Adaptar a Lectura Fácil</strong> para generar la versión estructurada bajo lineamientos DUA.
-          </p>
-        </div>
-
-        <!-- ESTADO DE PROCESAMIENTO CON LA IA -->
-        <div id="loadingState" class="hidden flex-grow flex-col items-center justify-center p-8 text-center space-y-4">
-          <div class="w-12 h-12 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin"></div>
-          <div>
-            <p class="font-bold text-slate-800 dark:text-slate-200 text-base">
-              Generando adaptación en Lectura Fácil...
-            </p>
-            <p class="text-xs text-slate-500 dark:text-slate-400 mt-1 max-w-sm">
-              Estructurando oraciones lineales, seleccionando vocabulario accesible y creando el cuestionario de autocomprobación.
-            </p>
-          </div>
-        </div>
-
-        <!-- CONTENEDOR DEL RESULTADO RENDERIZADO -->
-        <article id="printArea" class="hidden flex-grow overflow-y-auto mt-4 p-2 text-slate-800 dark:text-slate-200 prose-custom" aria-live="polite">
-          <div id="resultContent"></div>
-        </article>
-
-      </section>
-
-    </div>
-  </main>
-
-  <!-- NOTIFICACIONES TOAST ACCESIBLES (Sin llamadas a alert()) -->
-  <div id="toastContainer" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2 pointer-events-none" aria-live="assertive"></div>
-
-  <!-- PIE INSTITUCIONAL -->
-  <footer class="bg-brand-900 text-slate-300 text-xs py-5 border-t border-brand-800 no-print mt-auto">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-3 text-center sm:text-left">
-      <div>
-        <p class="font-semibold text-slate-100">
-          Diplomatura de Extensión — Accesibilidad 2026
-        </p>
-        <p class="text-slate-400 mt-0.5">
-          Herramienta pedagógica orientada a garantizar el derecho a la autonomía informativa y la inclusión curricular.
-        </p>
-      </div>
-      <div class="text-slate-400">
-        Villa Mercedes, San Luis | Modelo Social de la Discapacidad
-      </div>
-    </div>
-  </footer>
-
-  <!-- LÓGICA DE EXTRACCIÓN (PDF / DOCX) Y COMUNICACIÓN CON GEMINI -->
   <script>
-    // Inicializar iconos
-    lucide.createIcons();
+    // Configuración de PDF.js
+    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 
-    // Referencias del DOM
-    const inputApiKey = document.getElementById('inputApiKey');
-    const btnSaveKey = document.getElementById('btnSaveKey');
-    const btnClearKey = document.getElementById('btnClearKey');
-    const btnToggleShowKey = document.getElementById('btnToggleShowKey');
-    const eyeIcon = document.getElementById('eyeIcon');
-    const keyStatusBadge = document.getElementById('keyStatusBadge');
-    const toggleApiKeyHeader = document.getElementById('toggleApiKeyHeader');
-    const apiKeyPanelBody = document.getElementById('apiKeyPanelBody');
-    const chevronKey = document.getElementById('chevronKey');
-    const toggleKeyText = document.getElementById('toggleKeyText');
+    // Elementos DOM
+    const inputText = document.getElementById('input-text');
+    const charCounter = document.getElementById('char-counter');
+    const wordCounter = document.getElementById('word-counter');
+    const fileInput = document.getElementById('file-input');
+    const dropZone = document.getElementById('drop-zone');
+    const btnProcess = document.getElementById('btn-process');
+    const statusBox = document.getElementById('status-box');
+    const statusText = document.getElementById('status-text');
+    const outputSection = document.getElementById('output-section');
+    const outputContent = document.getElementById('output-content');
+    const btnTts = document.getElementById('btn-tts');
+    const btnCopy = document.getElementById('btn-copy');
+    const btnPrint = document.getElementById('btn-print');
 
-    const dropZone = document.getElementById('dropZone');
-    const fileInput = document.getElementById('fileInput');
-    const fileParsingStatus = document.getElementById('fileParsingStatus');
-    const fileParsingLabel = document.getElementById('fileParsingLabel');
-    const fileBadge = document.getElementById('fileBadge');
-    const fileParsingSpinner = document.getElementById('fileParsingSpinner');
+    let rawOutputMarkdown = "";
 
-    const sourceText = document.getElementById('sourceText');
-    const wordCount = document.getElementById('wordCount');
-    const charCount = document.getElementById('charCount');
-    const btnClearText = document.getElementById('btnClearText');
-    const btnLoadSample = document.getElementById('btnLoadSample');
-
-    const btnTransform = document.getElementById('btnTransform');
-    const btnTransformText = document.getElementById('btnTransformText');
-
-    const emptyState = document.getElementById('emptyState');
-    const loadingState = document.getElementById('loadingState');
-    const printArea = document.getElementById('printArea');
-    const resultContent = document.getElementById('resultContent');
-    const outputActions = document.getElementById('outputActions');
-
-    const btnCopyResult = document.getElementById('btnCopyResult');
-    const btnSpeakResult = document.getElementById('btnSpeakResult');
-    const speakIcon = document.getElementById('speakIcon');
-    const speakLabel = document.getElementById('speakLabel');
-    const btnPrintResult = document.getElementById('btnPrintResult');
-    const btnDownloadResult = document.getElementById('btnDownloadResult');
-    const btnStopSpeechGlobal = document.getElementById('btnStopSpeechGlobal');
-
-    // Accesibilidad tipográfica
-    const btnFontInc = document.getElementById('btnFontInc');
-    const btnFontDec = document.getElementById('btnFontDec');
-    const btnFontReset = document.getElementById('btnFontReset');
-    const btnTheme = document.getElementById('btnTheme');
-    const themeIcon = document.getElementById('themeIcon');
-    const themeLabel = document.getElementById('themeLabel');
-
-    let currentFontSizePx = 16;
-    let isSpeaking = false;
-    let rawResultMarkdown = "";
-
-    // 1. NOTIFICACIONES ACCESIBLES
-    function showNotification(message, type = 'info') {
-      const container = document.getElementById('toastContainer');
-      const toast = document.createElement('div');
-      toast.className = `pointer-events-auto flex items-center gap-2 px-4 py-3 rounded-xl shadow-lg text-xs font-semibold text-white transition-all transform duration-300 translate-y-2 opacity-0 max-w-sm ${
-        type === 'error' ? 'bg-red-600' :
-        type === 'success' ? 'bg-emerald-600' :
-        type === 'warning' ? 'bg-amber-600' : 'bg-brand-700'
-      }`;
-      
-      const icon = type === 'error' ? 'alert-triangle' :
-                   type === 'success' ? 'check-circle' :
-                   type === 'warning' ? 'alert-circle' : 'info';
-                   
-      toast.innerHTML = `<i data-lucide="${icon}" class="w-4 h-4 flex-shrink-0"></i> <span>${message}</span>`;
-      container.appendChild(toast);
-      lucide.createIcons({ targets: [toast] });
-
-      requestAnimationFrame(() => {
-        toast.classList.remove('translate-y-2', 'opacity-0');
-      });
-
-      setTimeout(() => {
-        toast.classList.add('opacity-0', 'translate-y-2');
-        setTimeout(() => toast.remove(), 300);
-      }, 4000);
+    // Contadores de caracteres y palabras
+    function updateCounters() {
+      const text = inputText.value;
+      charCounter.textContent = `Caracteres: ${text.length}`; const words = text.trim() ? text.trim().split(/\s+/).length : 0; wordCounter.textContent = `Palabras: ${words}`;
     }
 
-    // 2. ACCESIBILIDAD (Contraste y Tamaño)
-    function updateFontSize(delta) {
-      currentFontSizePx = Math.max(12, Math.min(24, currentFontSizePx + delta));
-      document.documentElement.style.setProperty('--base-font-size', `${currentFontSizePx}px`);
-    }
+    inputText.addEventListener('input', updateCounters);
 
-    btnFontInc.addEventListener('click', () => updateFontSize(2));
-    btnFontDec.addEventListener('click', () => updateFontSize(-2));
-    btnFontReset.addEventListener('click', () => {
-      currentFontSizePx = 16;
-      document.documentElement.style.setProperty('--base-font-size', '16px');
-    });
-
-    btnTheme.addEventListener('click', () => {
-      const isDark = document.documentElement.classList.toggle('dark');
-      localStorage.setItem('dua_theme', isDark ? 'dark' : 'light');
-      updateThemeUI(isDark);
-    });
-
-    function updateThemeUI(isDark) {
-      if (isDark) {
-        themeIcon.setAttribute('data-lucide', 'moon');
-        themeLabel.textContent = 'Modo Claro';
-      } else {
-        themeIcon.setAttribute('data-lucide', 'sun-medium');
-        themeLabel.textContent = 'Alto Contraste';
-      }
-      lucide.createIcons();
-    }
-
-    if (localStorage.getItem('dua_theme') === 'dark' || 
-       (!localStorage.getItem('dua_theme') && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
-      document.documentElement.classList.add('dark');
-      updateThemeUI(true);
-    }
-
-    // 3. GESTIÓN DE API KEY
-    function updateKeyStatusUI() {
-      const savedKey = localStorage.getItem('gemini_api_key_dua');
-      if (savedKey && savedKey.trim().length > 10) {
-        keyStatusBadge.textContent = 'Configurada';
-        keyStatusBadge.className = 'text-xs px-2.5 py-0.5 rounded-full font-semibold bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300';
-        inputApiKey.value = savedKey;
-      } else {
-        keyStatusBadge.textContent = 'No configurada';
-        keyStatusBadge.className = 'text-xs px-2.5 py-0.5 rounded-full font-semibold bg-red-100 text-red-800 dark:bg-red-950 dark:text-red-300';
-      }
-    }
-
-    btnSaveKey.addEventListener('click', () => {
-      const key = inputApiKey.value.trim();
-      if (!key) {
-        showNotification('Ingresa una API Key válida antes de guardar.', 'warning');
-        return;
-      }
-      localStorage.setItem('gemini_api_key_dua', key);
-      updateKeyStatusUI();
-      showNotification('Clave API guardada con éxito en tu navegador.', 'success');
-    });
-
-    btnClearKey.addEventListener('click', () => {
-      localStorage.removeItem('gemini_api_key_dua');
-      inputApiKey.value = '';
-      updateKeyStatusUI();
-      showNotification('Clave eliminada.', 'info');
-    });
-
-    btnToggleShowKey.addEventListener('click', () => {
-      if (inputApiKey.type === 'password') {
-        inputApiKey.type = 'text';
-        eyeIcon.setAttribute('data-lucide', 'eye-off');
-      } else {
-        inputApiKey.type = 'password';
-        eyeIcon.setAttribute('data-lucide', 'eye');
-      }
-      lucide.createIcons();
-    });
-
-    toggleApiKeyHeader.addEventListener('click', () => {
-      const isHidden = apiKeyPanelBody.classList.toggle('hidden');
-      chevronKey.style.transform = isHidden ? 'rotate(0deg)' : 'rotate(180deg)';
-      toggleKeyText.textContent = isHidden ? 'Gestionar clave' : 'Ocultar panel';
-    });
-
-    // 4. CONTADORES DE TEXTO
-    function updateCounts() {
-      const text = sourceText.value;
-      const chars = text.length;
-      const words = text.trim() === '' ? 0 : text.trim().split(/\s+/).length;
-      wordCount.textContent = words.toLocaleString();
-      charCount.textContent = chars.toLocaleString();
-    }
-
-    sourceText.addEventListener('input', updateCounts);
-
-    btnClearText.addEventListener('click', () => {
-      sourceText.value = '';
-      fileParsingStatus.classList.add('hidden');
-      updateCounts();
-      sourceText.focus();
-    });
-
-    btnLoadSample.addEventListener('click', () => {
-      sourceText.value = `El Diseño Universal para el Aprendizaje (DUA) se fundamenta en las investigaciones de la neurociencia aplicada, la cual sostiene que la variabilidad en los patrones de conectividad de las redes cerebrales —específicamente las redes de reconocimiento, estratégicas y afectivas— es intrínseca a la diversidad humana. Por consiguiente, los currículos tradicionales monolíticos e inflexibles generan barreras discapacitantes en los entornos de aprendizaje. La metodología de Lectura Fácil constituye un dispositivo de accesibilidad cognitiva que descompone las estructuras sintácticas hiperbáticas y la polisemia conceptual en unidades textuales lineales con el propósito de restituir el derecho a la autonomía informativa.`;
-      fileParsingStatus.classList.add('hidden');
-      updateCounts();
-      showNotification('Texto de muestra cargado.', 'info');
-    });
-
-    // 5. MOTOR DE EXTRACCIÓN CLIENT-SIDE (DOCX, PDF Y TXT)
-    dropZone.addEventListener('click', () => fileInput.click());
-
-    // Eventos Drag & Drop
-    ['dragenter', 'dragover'].forEach(eventName => {
-      dropZone.addEventListener(eventName, (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        dropZone.classList.add('dragover-active');
-      }, false);
-    });
-
-    ['dragleave', 'drop'].forEach(eventName => {
-      dropZone.addEventListener(eventName, (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        dropZone.classList.remove('dragover-active');
-      }, false);
-    });
-
-    dropZone.addEventListener('drop', (e) => {
-      const files = e.dataTransfer.files;
-      if (files.length > 0) {
-        processUploadedFile(files[0]);
-      }
-    });
-
-    fileInput.addEventListener('change', (e) => {
-      if (e.target.files.length > 0) {
-        processUploadedFile(e.target.files[0]);
-      }
-    });
-
-    async function processUploadedFile(file) {
-      const fileName = file.name;
-      const fileExt = fileName.split('.').pop().toLowerCase();
-
-      fileParsingStatus.classList.remove('hidden');
-      fileParsingSpinner.classList.remove('hidden');
-      fileParsingLabel.textContent = `Leyendo "${fileName}"...`;
-      fileBadge.textContent = fileExt.toUpperCase();
-
-      try {
-        if (fileExt === 'pdf') {
-          await extractPdfText(file);
-        } else if (fileExt === 'docx') {
-          await extractDocxText(file);
-        } else if (fileExt === 'txt' || fileExt === 'md' || fileExt === 'text') {
-          await extractPlainText(file);
-        } else {
-          throw new Error('Formato no compatible. Por favor sube archivos .pdf, .docx o .txt');
-        }
-
-        fileParsingSpinner.classList.add('hidden');
-        fileParsingLabel.textContent = `Archivo cargado con éxito: "${fileName}"`;
-        showNotification(`Extracción finalizada para ${fileName}`, 'success');
-      } catch (err) {
-        console.error('Error al procesar archivo:', err);
-        fileParsingSpinner.classList.add('hidden');
-        fileParsingLabel.textContent = `Error: ${err.message}`;
-        showNotification(err.message, 'error');
-      } finally {
-        fileInput.value = '';
-      }
-    }
-
-    // Extracción de Word (.docx) con Mammoth.js
-    async function extractDocxText(file) {
-      if (!window.mammoth) {
-        throw new Error('La librería Mammoth.js no está disponible.');
-      }
-      const arrayBuffer = await file.arrayBuffer();
-      const result = await mammoth.extractRawText({ arrayBuffer: arrayBuffer });
-      if (!result.value.trim()) {
-        throw new Error('El documento Word no contiene texto legible.');
-      }
-      sourceText.value = result.value.trim();
-      updateCounts();
-    }
-
-    // Extracción de PDF con PDF.js página por página
-    async function extractPdfText(file) {
-      if (!window.pdfjsLib) {
-        throw new Error('La librería PDF.js no está disponible.');
-      }
-      const arrayBuffer = await file.arrayBuffer();
-      const loadingTask = pdfjsLib.getDocument({ data: arrayBuffer });
-      const pdf = await loadingTask.promise;
-      
-      let fullText = '';
-      const totalPages = pdf.numPages;
-
-      for (let i = 1; i <= totalPages; i++) {
-        fileParsingLabel.textContent = `Extrayendo texto del PDF: página ${i} de ${totalPages}...`;
-        const page = await pdf.getPage(i);
-        const textContent = await page.getTextContent();
-        const pageStrings = textContent.items.map(item => item.str);
-        fullText += pageStrings.join(' ') + '\n\n';
-      }
-
-      if (!fullText.trim()) {
-        throw new Error('No se detectó texto en el PDF (podría tratarse de un documento escaneado como imagen).');
-      }
-
-      sourceText.value = fullText.trim();
-      updateCounts();
-    }
-
-    // Extracción de texto plano (.txt, .md)
-    async function extractPlainText(file) {
-      const text = await file.text();
-      sourceText.value = text.trim();
-      updateCounts();
-    }
-
-    // 6. ADAPTACIÓN DUA & LECTURA FÁCIL (PROMPT DEL SISTEMA Y LLAMADA A GEMINI)
-    const SYSTEM_PROMPT_DUA = `Actúa como un Especialista en Accesibilidad Cognitiva, Diseño Universal para el Aprendizaje (DUA) y Metodología de Lectura Fácil.
-Tu tarea es transformar el texto ingresado en una versión completa, digna y accesible en Lectura Fácil, articulada con los principios del DUA.
-
-PAUTAS RIGUROSAS DE LECTURA FÁCIL:
-- Oraciones cortas y lineales (Sujeto + Verbo + Predicado).
-- Usa voz activa. Evita construcciones pasivas y oraciones subordinadas largas.
-- Trata una sola idea principal por párrafo.
-- Preserva el rigor de los conceptos clave; no infantilices ni elimines información indispensable.
-- Sugiere apoyos visuales entre corchetes, por ejemplo: [Icono o imagen sugerida: balanza de justicia].
-
-ESTRUCTURA DE RESPUESTA EN MARKDOWN:
-
-# 1. Resumen Inicial e Intención (El "Porqué" - DUA: Red Afectiva)
-Explica en 3 o 4 líneas de qué trata el material y por qué es importante o útil para el estudiante.
-
-# 2. Texto Adaptado a Lectura Fácil (El "Qué" - DUA: Red de Reconocimiento)
-Desarrolla el contenido adaptado utilizando párrafos breves, títulos descriptivos y listas claras. Inserta las sugerencias visuales entre corchetes.
-
-# 3. Glosario de Palabras Difíciles
-Lista los conceptos técnicos o términos poco usuales del texto y explica su significado en lenguaje cotidiano.
-
-# 4. Ideas Clave y Autocomprobación (El "Cómo" - DUA: Red Estratégica)
-- **Tres ideas principales:** Resumen de los 3 puntos más importantes.
-- **Preguntas de autoevaluación:** 2 o 3 preguntas de opción múltiple o preguntas guía para que el estudiante valide su aprendizaje de manera autónoma.`;
-
-    btnTransform.addEventListener('click', async () => {
-      const apiKey = localStorage.getItem('gemini_api_key_dua') || inputApiKey.value.trim();
-      const textToAdapt = sourceText.value.trim();
-
-      if (!apiKey) {
-        showNotification('Configura primero tu Gemini API Key en el panel superior.', 'warning');
-        apiKeyPanelBody.classList.remove('hidden');
-        inputApiKey.focus();
-        return;
-      }
-
-      if (!textToAdapt) {
-        showNotification('Ingresa o sube un archivo antes de transformar.', 'warning');
-        sourceText.focus();
-        return;
-      }
-
-      emptyState.classList.add('hidden');
-      printArea.classList.add('hidden');
-      loadingState.classList.remove('hidden');
-      btnTransform.disabled = true;
-      btnTransform.classList.add('opacity-60', 'cursor-not-allowed');
-      btnTransformText.textContent = 'Adaptando a Lectura Fácil...';
-
-      try {
-        const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
-        
-        const payload = {
-          contents: [
-            {
-              role: "user",
-              parts: [
-                { text: SYSTEM_PROMPT_DUA + "\n\n--- TEXTO A TRANSFORMAR ---\n" + textToAdapt }
-              ]
-            }
-          ],
-          generationConfig: {
-            temperature: 0.2,
-            maxOutputTokens: 2500,
-          }
-        };
-
-        const response = await fetch(apiUrl, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload)
-        });
-
-        if (!response.ok) {
-          const errData = await response.json().catch(() => ({}));
-          const errMsg = errData.error?.message || `Error del servidor HTTP ${response.status}`;
-          throw new Error(errMsg);
-        }
-
-        const data = await response.json();
-        const candidate = data.candidates?.[0];
-        const generatedText = candidate?.content?.parts?.[0]?.text;
-
-        if (!generatedText) {
-          throw new Error('La respuesta recibida no contiene texto válido.');
-        }
-
-        rawResultMarkdown = generatedText;
-        resultContent.innerHTML = marked.parse(generatedText);
-        
-        loadingState.classList.add('hidden');
-        printArea.classList.remove('hidden');
-        outputActions.classList.remove('opacity-40', 'pointer-events-none');
-        
-        showNotification('¡Texto adaptado exitosamente a Lectura Fácil!', 'success');
-        printArea.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-
-      } catch (error) {
-        console.error('Error al adaptar texto:', error);
-        loadingState.classList.add('hidden');
-        emptyState.classList.remove('hidden');
-        showNotification(`Error: ${error.message}`, 'error');
-      } finally {
-        btnTransform.disabled = false;
-        btnTransform.classList.remove('opacity-60', 'cursor-not-allowed');
-        btnTransformText.textContent = 'Adaptar a Lectura Fácil (DUA)';
-      }
-    });
-
-    // 7. EXPORTACIÓN Y SÍNTESIS DE VOZ
-    
-    // Copiar
-    btnCopyResult.addEventListener('click', () => {
-      if (!rawResultMarkdown) return;
-      const textarea = document.createElement('textarea');
-      textarea.value = rawResultMarkdown;
-      textarea.style.position = 'fixed';
-      textarea.style.opacity = '0';
-      document.body.appendChild(textarea);
-      textarea.select();
-      try {
-        document.execCommand('copy');
-        showNotification('Texto adaptado copiado al portapapeles.', 'success');
-      } catch (err) {
-        showNotification('No se pudo copiar automáticamente.', 'error');
-      }
-      document.body.removeChild(textarea);
-    });
-
-    // Descargar TXT
-    btnDownloadResult.addEventListener('click', () => {
-      if (!rawResultMarkdown) return;
-      const blob = new Blob([rawResultMarkdown], { type: 'text/plain;charset=utf-8' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `Lectura_Facil_DUA_${new Date().toISOString().slice(0, 10)}.txt`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-      showNotification('Documento descargado en formato de texto.', 'success');
-    });
-
-    // Imprimir o guardar en PDF
-    btnPrintResult.addEventListener('click', () => {
-      if (!rawResultMarkdown) return;
-      window.print();
-    });
-
-    // Síntesis de voz accesible (Web Speech API)
-    function toggleSpeech() {
-      if (!('speechSynthesis' in window)) {
-        showNotification('Tu navegador no cuenta con soporte para síntesis de voz.', 'warning');
-        return;
-      }
-
-      if (isSpeaking) {
-        window.speechSynthesis.cancel();
-        isSpeaking = false;
-        updateSpeechUI(false);
-        return;
-      }
-
-      const textToRead = resultContent.innerText;
-      if (!textToRead.trim()) return;
-
-      const utterance = new SpeechSynthesisUtterance(textToRead);
-      utterance.lang = 'es-ES';
-      utterance.rate = 0.95; // Ritmo pausado para favorecer la comprensión
-
-      utterance.onstart = () => {
-        isSpeaking = true;
-        updateSpeechUI(true);
-      };
-
-      utterance.onend = () => {
-        isSpeaking = false;
-        updateSpeechUI(false);
-      };
-
-      utterance.onerror = () => {
-        isSpeaking = false;
-        updateSpeechUI(false);
-      };
-
-      window.speechSynthesis.speak(utterance);
-    }
-
-    function updateSpeechUI(active) {
-      if (active) {
-        speakIcon.setAttribute('data-lucide', 'volume-x');
-        speakLabel.textContent = 'Detener';
-        btnSpeakResult.classList.add('bg-blue-100', 'text-blue-800', 'dark:bg-blue-950');
-        btnStopSpeechGlobal.classList.remove('hidden');
-      } else {
-        speakIcon.setAttribute('data-lucide', 'volume-2');
-        speakLabel.textContent = 'Escuchar';
-        btnSpeakResult.classList.remove('bg-blue-100', 'text-blue-800', 'dark:bg-blue-950');
-        btnStopSpeechGlobal.classList.add('hidden');
-      }
-      lucide.createIcons();
-    }
-
-    btnSpeakResult.addEventListener('click', toggleSpeech);
-    btnStopSpeechGlobal.addEventListener('click', () => {
-      window.speechSynthesis.cancel();
-      isSpeaking = false;
-      updateSpeechUI(false);
-    });
-
-    window.addEventListener('beforeunload', () => {
-      if ('speechSynthesis' in window) {
-        window.speechSynthesis.cancel();
-      }
-    });
-
-    // Inicio y recuperación de estado
-    window.onload = () => {
-      updateKeyStatusUI();
-      if (localStorage.getItem('gemini_api_key_dua')) {
-        apiKeyPanelBody.classList.add('hidden');
-        chevronKey.style.transform = 'rotate(0deg)';
-        toggleKeyText.textContent = 'Gestionar clave';
-      }
-    };
-  </script>
-</body>
-</html>
+    // Accesibilidad: Escalado tipográfico
+    let currentFontSize = 16;
+    document.getElementById('btn-inc').addEventListener('click', () => {
+      if (currentFontSize < 24) {
+        currentFontSize += 2;
+        document.documentElement.style.setProperty('--base-font-size', `${currentFontSize}px`); } });  document.getElementById('btn-dec').addEventListener('click', () => { if (currentFontSize > 12) { currentFontSize -= 2; document.documentElement.style.setProperty('--base-font-size', `${currentFontSize}px
