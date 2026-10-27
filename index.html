@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Adaptador DUA & Lectura Fácil</title>
   
-  <!-- Librerías externas para accesibilidad, lectura de documentos y Markdown -->
+  <!-- Librerías externas para Markdown, Word (.docx) y PDF -->
   <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
@@ -384,37 +384,306 @@
   </div>
 
   <script>
-    // Configuración de PDF.js
-    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+    document.addEventListener('DOMContentLoaded', () => {
+      // 1. Configuración segura de PDF.js si la librería cargó correctamente
+      if (window.pdfjsLib) {
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+      }
 
-    // Elementos DOM
-    const inputText = document.getElementById('input-text');
-    const charCounter = document.getElementById('char-counter');
-    const wordCounter = document.getElementById('word-counter');
-    const fileInput = document.getElementById('file-input');
-    const dropZone = document.getElementById('drop-zone');
-    const btnProcess = document.getElementById('btn-process');
-    const statusBox = document.getElementById('status-box');
-    const statusText = document.getElementById('status-text');
-    const outputSection = document.getElementById('output-section');
-    const outputContent = document.getElementById('output-content');
-    const btnTts = document.getElementById('btn-tts');
-    const btnCopy = document.getElementById('btn-copy');
-    const btnPrint = document.getElementById('btn-print');
+      // 2. Elementos DOM
+      const inputText = document.getElementById('input-text');
+      const charCounter = document.getElementById('char-counter');
+      const wordCounter = document.getElementById('word-counter');
+      const fileInput = document.getElementById('file-input');
+      const dropZone = document.getElementById('drop-zone');
+      const btnProcess = document.getElementById('btn-process');
+      const statusBox = document.getElementById('status-box');
+      const statusText = document.getElementById('status-text');
+      const outputSection = document.getElementById('output-section');
+      const outputContent = document.getElementById('output-content');
+      const btnTts = document.getElementById('btn-tts');
+      const btnCopy = document.getElementById('btn-copy');
+      const btnPrint = document.getElementById('btn-print');
 
-    let rawOutputMarkdown = "";
+      let rawOutputMarkdown = "";
 
-    // Contadores de caracteres y palabras
-    function updateCounters() {
-      const text = inputText.value;
-      charCounter.textContent = `Caracteres: ${text.length}`; const words = text.trim() ? text.trim().split(/\s+/).length : 0; wordCounter.textContent = `Palabras: ${words}`;
-    }
+      // 3. Contadores de caracteres y palabras
+      function updateCounters() {
+        if (!inputText) return;
+        const text = inputText.value || "";
+        if (charCounter) charCounter.textContent = `Caracteres: ${text.length}`;
+        const words = text.trim() ? text.trim().split(/\s+/).length : 0;
+        if (wordCounter) wordCounter.textContent = `Palabras: ${words}`;
+      }
 
-    inputText.addEventListener('input', updateCounters);
+      if (inputText) {
+        inputText.addEventListener('input', updateCounters);
+      }
 
-    // Accesibilidad: Escalado tipográfico
-    let currentFontSize = 16;
-    document.getElementById('btn-inc').addEventListener('click', () => {
-      if (currentFontSize < 24) {
-        currentFontSize += 2;
-        document.documentElement.style.setProperty('--base-font-size', `${currentFontSize}px`); } });  document.getElementById('btn-dec').addEventListener('click', () => { if (currentFontSize > 12) { currentFontSize -= 2; document.documentElement.style.setProperty('--base-font-size', `${currentFontSize}px
+      // 4. Accesibilidad: Escalado tipográfico
+      let currentFontSize = 16;
+      const btnInc = document.getElementById('btn-inc');
+      const btnDec = document.getElementById('btn-dec');
+      const btnReset = document.getElementById('btn-reset');
+      const btnContrast = document.getElementById('btn-contrast');
+
+      if (btnInc) {
+        btnInc.addEventListener('click', () => {
+          if (currentFontSize < 26) {
+            currentFontSize += 2;
+            document.documentElement.style.setProperty('--base-font-size', `${currentFontSize}px`);
+          }
+        });
+      }
+
+      if (btnDec) {
+        btnDec.addEventListener('click', () => {
+          if (currentFontSize > 12) {
+            currentFontSize -= 2;
+            document.documentElement.style.setProperty('--base-font-size', `${currentFontSize}px`);
+          }
+        });
+      }
+
+      if (btnReset) {
+        btnReset.addEventListener('click', () => {
+          currentFontSize = 16;
+          document.documentElement.style.setProperty('--base-font-size', '16px');
+        });
+      }
+
+      if (btnContrast) {
+        btnContrast.addEventListener('click', () => {
+          document.body.classList.toggle('high-contrast');
+        });
+      }
+
+      // 5. Carga de Archivos: Arrastrar y Soltar
+      if (dropZone && fileInput) {
+        dropZone.addEventListener('click', () => fileInput.click());
+        dropZone.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            fileInput.click();
+          }
+        });
+
+        ['dragenter', 'dragover'].forEach(eventName => {
+          dropZone.addEventListener(eventName, (e) => {
+            e.preventDefault();
+            dropZone.classList.add('dragover');
+          });
+        });
+
+        ['dragleave', 'drop'].forEach(eventName => {
+          dropZone.addEventListener(eventName, (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('dragover');
+          });
+        });
+
+        dropZone.addEventListener('drop', (e) => {
+          if (e.dataTransfer.files && e.dataTransfer.files.length) {
+            handleFile(e.dataTransfer.files[0]);
+          }
+        });
+
+        fileInput.addEventListener('change', (e) => {
+          if (e.target.files && e.target.files.length) {
+            handleFile(e.target.files[0]);
+          }
+        });
+      }
+
+      // Procesador de archivos (.docx, .pdf, .txt)
+      async function handleFile(file) {
+        const ext = file.name.split('.').pop().toLowerCase();
+        if (statusBox) statusBox.style.display = 'flex';
+        if (statusText) statusText.textContent = `Leyendo archivo ${file.name}...`;
+
+        try {
+          if (ext === 'docx') {
+            if (!window.mammoth) {
+              throw new Error('La librería para leer Word aún se está cargando. Intenta de nuevo en unos segundos.');
+            }
+            const arrayBuffer = await file.arrayBuffer();
+            const result = await mammoth.extractRawText({ arrayBuffer });
+            inputText.value = result.value;
+          } else if (ext === 'pdf') {
+            if (!window.pdfjsLib) {
+              throw new Error('La librería para leer PDF aún se está cargando. Intenta de nuevo en unos segundos.');
+            }
+            const arrayBuffer = await file.arrayBuffer();
+            const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+            let fullText = "";
+            for (let i = 1; i <= pdf.numPages; i++) {
+              if (statusText) statusText.textContent = `Leyendo página ${i} de ${pdf.numPages}...`;
+              const page = await pdf.getPage(i);
+              const textContent = await page.getTextContent();
+              const pageText = textContent.items.map(item => item.str).join(' ');
+              fullText += pageText + "\n\n";
+            }
+            inputText.value = fullText;
+          } else if (ext === 'txt') {
+            const text = await file.text();
+            inputText.value = text;
+          } else {
+            alert('Formato no soportado. Por favor sube un archivo .docx, .pdf o .txt');
+          }
+          updateCounters();
+        } catch (err) {
+          alert('Error al leer el archivo: ' + err.message);
+        } finally {
+          if (statusBox) statusBox.style.display = 'none';
+          if (fileInput) fileInput.value = '';
+        }
+      }
+
+      // 6. Envío y adaptación con el Worker
+      if (btnProcess) {
+        btnProcess.addEventListener('click', async () => {
+          const text = inputText ? inputText.value.trim() : "";
+          if (!text) {
+            alert('Por favor, ingresa o carga un texto antes de solicitar la adaptación.');
+            return;
+          }
+
+          if (statusBox) statusBox.style.display = 'flex';
+          if (statusText) statusText.textContent = 'Adaptando a Lectura Fácil bajo principios DUA...';
+          btnProcess.disabled = true;
+
+          const systemInstructions = `Actúa como un Especialista en Accesibilidad Cognitiva, Diseño Universal para el Aprendizaje (DUA) y Metodología de Lectura Fácil. Tu objetivo es transformar cualquier material o documento provisto por el usuario en una versión accesible en Lectura Fácil, preservando la rigurosidad y el significado original sin caer en infantilismos ni condescendencias.
+
+Debes articular dos enfoques complementarios:
+1. Lectura Fácil: oraciones breves y lineales (Sujeto + Verbo + Predicado), priorizando la voz activa, evitando párrafos largos o subordinadas complejas. Una idea principal por oración.
+2. DUA (CAST):
+   - Múltiples formas de representación (el "qué"): estructura clara, apoyos visuales sugeridos y glosario.
+   - Múltiples formas de acción y expresión (el "cómo"): ideas clave y autoevaluación.
+   - Múltiples formas de implicación (el "porqué"): conexión y propósito claro de la lectura.
+
+ESTRUCTURA OBLIGATORIA DE LA RESPUESTA (Formato Markdown):
+### 1. Resumen Inicial e Intención (El "Porqué" - DUA III)
+- Explica brevemente de qué trata este texto y por qué es útil.
+
+### 2. Texto Adaptado a Lectura Fácil (El "Qué" - DUA I)
+- El desarrollo del contenido en oraciones cortas, claras y párrafos breves.
+- [Sugerencia visual]: Inserta notas entre corchetes sugiriendo apoyos visuales pertinentes (ejemplo: [Icono: balanza]).
+
+### 3. Glosario de Palabras Difíciles
+- Términos técnicos o difíciles explicados en lenguaje cotidiano.
+
+### 4. Ideas Clave y Verificación (El "Cómo" - DUA II)
+- Puntos Clave: 3 viñetas resumen con lo más importante.
+- Preguntas de Autocomprobación: 2 o 3 preguntas breves para que el lector compruebe su comprensión.`;
+
+          const payload = {
+            contents: [
+              {
+                role: "user",
+                parts: [
+                  { text: systemInstructions + "\n\nTexto original a transformar:\n" + text }
+                ]
+              }
+            ]
+          };
+
+          try {
+            const response = await fetch("https://adaptador-dua-proxy.claudioarielsavini.workers.dev/", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(payload)
+            });
+
+            if (!response.ok) {
+              const errBody = await response.text();
+              throw new Error(`Error en el servidor (${response.status}): ${errBody}`);
+            }
+
+            const data = await response.json();
+            
+            if (data.candidates && data.candidates[0].content && data.candidates[0].content.parts[0].text) {
+              rawOutputMarkdown = data.candidates[0].content.parts[0].text;
+              
+              if (window.marked) {
+                outputContent.innerHTML = marked.parse(rawOutputMarkdown);
+              } else {
+                outputContent.innerText = rawOutputMarkdown;
+              }
+
+              if (outputSection) {
+                outputSection.style.display = 'flex';
+                outputSection.scrollIntoView({ behavior: 'smooth' });
+              }
+            } else {
+              throw new Error('La respuesta recibida no contiene contenido válido.');
+            }
+
+          } catch (err) {
+            alert('No se pudo procesar la solicitud: ' + err.message);
+          } finally {
+            if (statusBox) statusBox.style.display = 'none';
+            btnProcess.disabled = false;
+          }
+        });
+      }
+
+      // 7. Utilidades: Copiar al portapapeles
+      if (btnCopy) {
+        btnCopy.addEventListener('click', async () => {
+          try {
+            await navigator.clipboard.writeText(rawOutputMarkdown);
+            alert('¡Texto copiado al portapapeles!');
+          } catch (err) {
+            alert('Error al copiar el texto.');
+          }
+        });
+      }
+
+      // 8. Utilidades: Imprimir
+      if (btnPrint) {
+        btnPrint.addEventListener('click', () => {
+          window.print();
+        });
+      }
+
+      // 9. Utilidades: Síntesis de voz (TTS)
+      let isSpeaking = false;
+      if (btnTts) {
+        btnTts.addEventListener('click', () => {
+          if (!window.speechSynthesis) {
+            alert('Tu navegador no soporta síntesis de voz.');
+            return;
+          }
+
+          if (isSpeaking) {
+            window.speechSynthesis.cancel();
+            btnTts.textContent = '🔊 Escuchar';
+            isSpeaking = false;
+          } else {
+            const textToRead = outputContent ? outputContent.innerText : "";
+            if (!textToRead) return;
+
+            const utterance = new SpeechSynthesisUtterance(textToRead);
+            utterance.lang = 'es-ES';
+            utterance.rate = 0.9;
+            
+            utterance.onend = () => {
+              btnTts.textContent = '🔊 Escuchar';
+              isSpeaking = false;
+            };
+            
+            utterance.onerror = () => {
+              btnTts.textContent = '🔊 Escuchar';
+              isSpeaking = false;
+            };
+
+            window.speechSynthesis.speak(utterance);
+            btnTts.textContent = '⏹️ Detener';
+            isSpeaking = true;
+          }
+        });
+      }
+    });
+  </script>
+</body>
+</html>
